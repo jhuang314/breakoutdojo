@@ -8,10 +8,9 @@ pub struct Ball {
     #[key]
     pub game_id: u32,
 
-    pub x: u32,
-    pub y: u32,
+    pub vec: Vec2,
     pub size: u32,
-    pub speed: u32,
+    pub speed: i32,
     pub dx: i32,
     pub dy: i32,
     pub visible: bool,
@@ -25,11 +24,10 @@ pub struct Paddle {
     #[key]
     pub game_id: u32,
 
-    pub x: u32,
-    pub y: u32,
+    pub vec: Vec2,
     pub w: u32,
     pub h: u32,
-    pub speed: u32,
+    pub speed: i32,
     pub dx: i32,
     pub visible: bool,
 }
@@ -44,8 +42,7 @@ pub struct Brick {
     #[key]
     pub game_id: u32,
 
-    pub x: u32,
-    pub y: u32,
+    pub vec: Vec2,
     pub w: u32,
     pub h: u32,
     pub offsetX: u32,
@@ -60,7 +57,7 @@ pub struct Score {
     pub player: ContractAddress,
     #[key]
     pub game_id: u32,
-    
+
     pub score: u32,
 }
 
@@ -102,8 +99,8 @@ pub enum Direction {
 
 #[derive(Copy, Drop, Serde, IntrospectPacked, Debug)]
 pub struct Vec2 {
-    pub x: u32,
-    pub y: u32
+    pub x: i32,
+    pub y: i32
 }
 
 

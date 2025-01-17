@@ -1,4 +1,5 @@
 use dojo_starter::models::{Direction, Position};
+use dojo_starter::models::{Vec2, Moves, DirectionsAvailable, Ball, Paddle, Brick, Score};
 
 const BRICK_ROWS: u32 = 9;
 const BRICK_COLUMNS: u32 = 5;
@@ -7,14 +8,17 @@ const BRICK_COLUMNS: u32 = 5;
 #[starknet::interface]
 trait IActions<T> {
     fn start(ref self: T, game_id: u32);
+    fn move(ref self: T, game_id: u32, direction: Direction);
+    fn tick(ref self: T, game_id: u32);
+
     fn spawn(ref self: T);
-    fn move(ref self: T, direction: Direction);
+    fn moveOriginal(ref self: T, direction: Direction);
 }
 
 // dojo decorator
 #[dojo::contract]
 pub mod actions {
-    use super::{IActions, Direction, Position, next_position};
+    use super::{IActions, Direction, Position, next_position, next_paddle_dx, next_paddle};
     use starknet::{ContractAddress, get_caller_address};
     use dojo_starter::models::{Vec2, Moves, DirectionsAvailable, Ball, Paddle, Brick, Score};
 
@@ -39,16 +43,57 @@ pub mod actions {
             let player = get_caller_address();
 
             let new_ball = Ball {
-                player, game_id, x: 400, y: 300, size: 10, speed: 4, dx: 4, dy: -4, visible: true,
+                player,
+                game_id,
+                vec: Vec2 { x: 400, y: 300 },
+                size: 10,
+                speed: 4,
+                dx: 4,
+                dy: -4,
+                visible: true,
             };
 
             let new_paddle = Paddle {
-                player, game_id, x: 360, y: 580, w: 80, h: 10, speed: 8, dx: 0, visible: true,
+                player,
+                game_id,
+                vec: Vec2 { x: 360, y: 580 },
+                w: 80,
+                h: 10,
+                speed: 8,
+                dx: 0,
+                visible: true,
             };
 
             // Write the new entities to the world.
             world.write_model(@new_ball);
             world.write_model(@new_paddle);
+        }
+
+        // Implementation of the move function for the ContractState struct.
+        fn move(ref self: ContractState, game_id: u32, direction: Direction) {
+            let mut world = self.world_default();
+
+            let player = get_caller_address();
+
+            let paddle: Paddle = world.read_model((player, game_id));
+
+            let next_paddle = next_paddle_dx(paddle, Option::Some(direction));
+
+            // Write the new position to the world.
+            world.write_model(@next_paddle);
+            // Emit an event to the world to notify about the player's move.
+        //world.emit_event(@Moved { player, direction });
+        }
+
+        fn tick(ref self: ContractState, game_id: u32) {
+            let mut world = self.world_default();
+
+            let player = get_caller_address();
+
+            let paddle: Paddle = world.read_model((player, game_id));
+            let next_paddle = next_paddle(paddle);
+
+            world.write_model(@next_paddle);
         }
 
         fn spawn(ref self: ContractState) {
@@ -80,8 +125,8 @@ pub mod actions {
             world.write_model(@moves);
         }
 
-        // Implementation of the move function for the ContractState struct.
-        fn move(ref self: ContractState, direction: Direction) {
+        // Implementation of the moveOriginal function for the ContractState struct.
+        fn moveOriginal(ref self: ContractState, direction: Direction) {
             // Get the address of the current caller, possibly the player's address.
 
             let mut world = self.world_default();
@@ -142,3 +187,23 @@ fn next_position(mut position: Position, direction: Option<Direction>) -> Positi
     };
     position
 }
+
+
+fn next_paddle_dx(mut paddle: Paddle, direction: Option<Direction>) -> Paddle {
+    match direction {
+        Option::None => { return paddle; },
+        Option::Some(d) => match d {
+            Direction::Left => { paddle.dx = -paddle.speed; },
+            Direction::Right => { paddle.dx = paddle.speed; },
+            Direction::Up => { return paddle; },
+            Direction::Down => { return paddle; },
+        },
+    };
+    paddle
+}
+
+fn next_paddle(mut paddle: Paddle) -> Paddle {
+    paddle.vec.x += paddle.dx;
+    paddle
+}
+
