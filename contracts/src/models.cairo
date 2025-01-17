@@ -2,6 +2,70 @@ use starknet::{ContractAddress};
 
 #[derive(Copy, Drop, Serde, Debug)]
 #[dojo::model]
+pub struct Ball {
+    #[key]
+    pub player: ContractAddress,
+    #[key]
+    pub game_id: u32,
+
+    pub x: u32,
+    pub y: u32,
+    pub size: u32,
+    pub speed: u32,
+    pub dx: i32,
+    pub dy: i32,
+    pub visible: bool,
+}
+
+#[derive(Copy, Drop, Serde, Debug)]
+#[dojo::model]
+pub struct Paddle {
+    #[key]
+    pub player: ContractAddress,
+    #[key]
+    pub game_id: u32,
+
+    pub x: u32,
+    pub y: u32,
+    pub w: u32,
+    pub h: u32,
+    pub speed: u32,
+    pub dx: i32,
+    pub visible: bool,
+}
+
+#[derive(Copy, Drop, Serde, Debug)]
+#[dojo::model]
+pub struct Brick {
+    #[key]
+    pub player: ContractAddress,
+    #[key]
+    pub id: u32,
+    #[key]
+    pub game_id: u32,
+
+    pub x: u32,
+    pub y: u32,
+    pub w: u32,
+    pub h: u32,
+    pub offsetX: u32,
+    pub offsetY: u32,
+    pub visible: bool,
+}
+
+#[derive(Copy, Drop, Serde, Debug)]
+#[dojo::model]
+pub struct Score {
+    #[key]
+    pub player: ContractAddress,
+    #[key]
+    pub game_id: u32,
+    
+    pub score: u32,
+}
+
+#[derive(Copy, Drop, Serde, Debug)]
+#[dojo::model]
 pub struct Moves {
     #[key]
     pub player: ContractAddress,
