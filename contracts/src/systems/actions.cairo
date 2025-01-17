@@ -1,8 +1,12 @@
 use dojo_starter::models::{Direction, Position};
 
+const BRICK_ROWS: u32 = 9;
+const BRICK_COLUMNS: u32 = 5;
+
 // define the interface
 #[starknet::interface]
 trait IActions<T> {
+    fn start(ref self: T, game_id: u32);
     fn spawn(ref self: T);
     fn move(ref self: T, direction: Direction);
 }
@@ -12,7 +16,7 @@ trait IActions<T> {
 pub mod actions {
     use super::{IActions, Direction, Position, next_position};
     use starknet::{ContractAddress, get_caller_address};
-    use dojo_starter::models::{Vec2, Moves, DirectionsAvailable};
+    use dojo_starter::models::{Vec2, Moves, DirectionsAvailable, Ball, Paddle, Brick, Score};
 
     use dojo::model::{ModelStorage, ModelValueStorage};
     use dojo::event::EventStorage;
@@ -27,12 +31,33 @@ pub mod actions {
 
     #[abi(embed_v0)]
     impl ActionsImpl of IActions<ContractState> {
+        fn start(ref self: ContractState, game_id: u32) {
+            // Get the default world.
+            let mut world = self.world_default();
+
+            // Get the address of the current caller, possibly the player's address.
+            let player = get_caller_address();
+
+            let new_ball = Ball {
+                player, game_id, x: 400, y: 300, size: 10, speed: 4, dx: 4, dy: -4, visible: true,
+            };
+
+            let new_paddle = Paddle {
+                player, game_id, x: 360, y: 580, w: 80, h: 10, speed: 8, dx: 0, visible: true,
+            };
+
+            // Write the new entities to the world.
+            world.write_model(@new_ball);
+            world.write_model(@new_paddle);
+        }
+
         fn spawn(ref self: ContractState) {
             // Get the default world.
             let mut world = self.world_default();
 
             // Get the address of the current caller, possibly the player's address.
             let player = get_caller_address();
+
             // Retrieve the player's current position from the world.
             let position: Position = world.read_model(player);
 
@@ -40,7 +65,7 @@ pub mod actions {
 
             // 1. Move the player's position 10 units in both the x and y direction.
             let new_position = Position {
-                player, vec: Vec2 { x: position.vec.x + 10, y: position.vec.y + 10 }
+                player, vec: Vec2 { x: position.vec.x + 10, y: position.vec.y + 10 },
             };
 
             // Write the new position to the world.
@@ -48,7 +73,7 @@ pub mod actions {
 
             // 2. Set the player's remaining moves to 100.
             let moves = Moves {
-                player, remaining: 100, last_direction: Option::None, can_move: true
+                player, remaining: 100, last_direction: Option::None, can_move: true,
             };
 
             // Write the new moves to the world.
@@ -66,8 +91,10 @@ pub mod actions {
             // Retrieve the player's current position and moves data from the world.
             let position: Position = world.read_model(player);
             let mut moves: Moves = world.read_model(player);
-            // if player hasn't spawn, read returns model default values. This leads to sub overflow afterwards.
-            // Plus it's generally considered as a good pratice to fast-return on matching conditions.
+            // if player hasn't spawn, read returns model default values. This leads to sub overflow
+            // afterwards.
+            // Plus it's generally considered as a good pratice to fast-return on matching
+            // conditions.
             if !moves.can_move {
                 return;
             }
@@ -111,7 +138,7 @@ fn next_position(mut position: Position, direction: Option<Direction>) -> Positi
             Direction::Right => { position.vec.x += 1; },
             Direction::Up => { position.vec.y -= 1; },
             Direction::Down => { position.vec.y += 1; },
-        }
+        },
     };
     position
 }
