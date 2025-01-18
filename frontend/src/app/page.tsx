@@ -13,9 +13,32 @@ import Header from "./components/internal/Header";
 import AddTokenButton from "./components/lib/AddToken";
 
 export default function Home() {
+
+
   return (
     <main className="flex min-h-svh flex-col justify-between gap-16">
       <Header />
+
+      <section className="pt-[8rem] md:pt-[clamp(200px,25vh,650px)]">
+        {/* <-- Breakout game --> */}
+        <div className="mx-auto flex max-w-[600px] flex-col gap-8 p-4 text-center md:max-w-[850px] md:p-8">
+          <canvas id="canvas" width="800" height="600"></canvas>
+
+          <button
+            id="start-game"
+            className="btn btn-primary mt-auto flex h-fit items-center justify-center gap-2 p-4 transition-all duration-500 hover:scale-105"
+          >
+            Start Game
+          </button>
+          <button
+            id="tick-game"
+            className="btn btn-primary mt-auto flex h-fit items-center justify-center gap-2 p-4 transition-all duration-500 hover:scale-105"
+          >
+            Tick
+          </button>
+        </div>
+
+      </section>
       {/* HERO --> */}
       <section className="pt-[8rem] md:pt-[clamp(200px,25vh,650px)]">
         <div className="mx-auto flex max-w-[600px] flex-col gap-8 p-4 text-center md:max-w-[850px] md:p-8">
