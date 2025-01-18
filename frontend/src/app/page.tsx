@@ -11,9 +11,98 @@ import Upright from "public/svg/Upright";
 import NetworkSwitcher from "./components/lib/NetworkSwitcher";
 import Header from "./components/internal/Header";
 import AddTokenButton from "./components/lib/AddToken";
+import { use, useEffect } from "react";
+
+type Vec2 = {
+  x: number;
+  y: number;
+}
+
+type Paddle = {
+  player: number,
+  game_id: number,
+  vec: Vec2,
+  w: number;
+  h: number;
+  speed: number;
+  dx: number;
+  visible: boolean;
+};
 
 export default function Home() {
+  let ctx: CanvasRenderingContext2D | null = null;
+  let canvas: HTMLCanvasElement | null = null;
+  const paddle: Paddle = {
+    player: 0,
+    game_id: 0,
+    vec: {
+      x: 0,
+      y: 0
+    },
+    w: 80,
+    h: 10,
+    speed: 8,
+    dx: 0,
+    visible: true
+  };
 
+  useEffect(() => {
+    canvas = document.getElementById("canvas") as HTMLCanvasElement;
+    ctx = canvas.getContext('2d');
+
+    paddle.vec.x = canvas.width / 2 - 40;
+    paddle.vec.y = canvas.height - 20;
+
+    document.addEventListener('keydown', keyDown);
+    document.addEventListener('keyup', keyUp);
+  }, []);
+
+  // Draw Paddle
+  const drawPaddle = (ctx: CanvasRenderingContext2D) => {
+    ctx.beginPath();
+    ctx.rect(paddle.vec.x, paddle.vec.y, paddle.w, paddle.h);
+    ctx.fillStyle = paddle.visible ? '#0095dd' : 'transparent';
+    ctx.fill();
+    ctx.closePath();
+  }
+
+  const draw = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
+    // clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    drawPaddle(ctx);
+  }
+
+  const gameLoop = () => {
+   if (ctx == null || canvas == null) {
+     return;
+   }
+  
+   console.log('gameLoop');
+    
+
+    // Draw everything
+    draw(ctx, canvas);
+  }
+
+  const keyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Right' || e.key === 'ArrowRight') {
+      paddle.dx = paddle.speed;
+    } else if (e.key === 'Left' || e.key === 'ArrowLeft') {
+      paddle.dx = -paddle.speed;
+    }
+  }
+
+  const keyUp = (e: KeyboardEvent) => {
+    if (
+      e.key === 'Right' ||
+      e.key === 'ArrowRight' ||
+      e.key === 'Left' ||
+      e.key === 'ArrowLeft'
+    ) {
+      paddle.dx = 0;
+    }
+  }
 
   return (
     <main className="flex min-h-svh flex-col justify-between gap-16">
@@ -33,6 +122,7 @@ export default function Home() {
           <button
             id="tick-game"
             className="btn btn-primary mt-auto flex h-fit items-center justify-center gap-2 p-4 transition-all duration-500 hover:scale-105"
+            onClick={gameLoop}
           >
             Tick
           </button>
